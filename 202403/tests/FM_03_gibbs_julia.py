@@ -4,8 +4,10 @@ from typing import Optional
 from julia import Main
 
 current_dir = Path(__file__).resolve().parent
-julia_file = current_dir / "FM_02_als_julia.jl"
+julia_file = current_dir / "FM_03_gibbs_julia.jl"
 Main.include(str(julia_file))
+
+# Factorization Machine
 
 class FactorizationMachines:
     def __init__(self,
@@ -51,14 +53,41 @@ D = 128
 seed = 0
 rng  = np.random.default_rng(seed)
 fm   = FactorizationMachines(N, K, seed=seed)
-x    = rng.choice((0, 1), size=(D, N))
 
-Q    = rng.uniform(-1., 1., (N, N))
-y    = np.einsum('dn,nm,dm->d', x, Q, x)
+Q      = rng.uniform(-1., 1., (N, N))
+x_data = rng.choice((0, 1), size=(D, N))
+y_data = np.einsum('dn,nm,dm->d', x_data, Q, x_data)
 
-init_params = fm.params
-x_data = x
-y_data = y
-f_init = fm.predict(x)
-num_iter = 1000
-_ = Main.train_fm_als(init_params, x_data.astype(float), y_data, f_init, num_iter)
+model_params = fm.params
+
+latent_params = {
+    'mu_w': 0.,
+    'mu_v': np.zeros(K, dtype=float),
+    'sigma2_w': 1.,
+    'sigma2_v': np.ones(K, dtype=float)
+}
+
+fixed_params = {
+    'mu_b': 0.,
+    'sigma2_b': 1.,
+    'm_w': 0.,
+    'm_v': 0.,
+    'l_w': 1.,
+    'l_v': 1.,
+    'a_w': 1.,
+    'a_v': 1.,
+    'b_w': 1.,
+    'b_v': 1.,
+    'a_noise': 1.,
+    'b_noise': 1.,
+}
+
+_, loss_hist = Main.train_fm_gibbs(
+    model_params,
+    latent_params,
+    fixed_params,
+    x_data.astype(float),
+    y_data,
+    fm.predict(x_data),
+    10000,
+)
