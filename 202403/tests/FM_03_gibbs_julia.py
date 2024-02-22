@@ -68,18 +68,14 @@ latent_params = {
 }
 
 fixed_params = {
-    'mu_b': 0.,
-    'sigma2_b': 1.,
-    'm_w': 0.,
-    'm_v': 0.,
-    'l_w': 1.,
-    'l_v': 1.,
-    'a_w': 1.,
-    'a_v': 1.,
-    'b_w': 1.,
-    'b_v': 1.,
-    'a_noise': 1.,
-    'b_noise': 1.,
+    'mu_b':     0., # for b
+    'sigma2_b': 1., # for b
+    'mu_0':     0., # for w, v
+    'gamma_0':  0., # for w, v
+    'alpha_0':  1., # for w, v
+    'beta_0':   1., # for w, v
+    'alpha_n':  1., # for noise
+    'beta_n':   1., # for noise
 }
 
 _, loss_hist = Main.train_fm_gibbs(
