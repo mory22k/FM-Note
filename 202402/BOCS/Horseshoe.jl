@@ -114,7 +114,7 @@ function sample_horseshoe_posterior(X, Y, num_iter, show_progress, seed=nothing,
         nu       = sample_nu_posterior(N_vars, lamb2, nu)
         xi       = sample_xi_posterior(tau2)
 
-        if show_progress
+        if show_progress && i % 100 == 0
             error = Y - X * w
             println("Iteration $i: $(mean(error .^ 2))")
         end
