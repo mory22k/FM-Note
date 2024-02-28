@@ -8,21 +8,25 @@ function sample_gaussian_efficient(
     Delta,
 )
     N_data, N_vars = size(Phi)
-    if ndims(Delta) == 1
-        u = randn(N_vars) .* sqrt.(Delta)
-        Delta = Diagonal(Delta)
-    else
-        u = rand(MvNormal(zeros(N_vars), Delta))
-    end
+    try
+        if ndims(Delta) == 1
+            u = randn(N_vars) .* sqrt.(Delta)
+            Delta = Diagonal(Delta)
+        else
+            u = rand(MvNormal(zeros(N_vars), Delta))
+        end
 
-    delta = randn(N_data)
-    v = Phi * u + delta
-    w = (Phi * Delta * Phi' + I) \ (alpha - v)
-    w_sample = u + Delta * Phi' * w
-    return w_sample
+        delta = randn(N_data)
+        v = Phi * u + delta
+        w = (Phi * Delta * Phi' + I) \ (alpha - v)
+        w_sample = u + Delta * Phi' * w
+        return w_sample
+    catch _
+        exit(1)
+    end
 end
 
-function sample_w_posterior(x_data, y_data, N_data, N_vars, XtY, XtX, tau2, lamb2, sigma2)
+function sample_w_posterior(x_data, y_data, N_data, N_vars, XtX, XtY, tau2, lamb2, sigma2)
     if N_data <= N_vars
         try
             w = sample_gaussian_efficient(x_data ./ sqrt(sigma2), y_data ./ sqrt(sigma2), tau2 .* lamb2 .* sigma2)
@@ -89,32 +93,43 @@ function sample_xi_posterior(tau2)
     return rand(InverseGamma(shape, scale))
 end
 
-function sample_horseshoe_posterior(X, Y, num_iter, show_progress, seed=nothing, return_error_history=false)
+function sample_params_posterior(X, Y, w, N_data, N_vars, XtX, XtY, sigma2_n, lamb2, tau2, nu, xi)
+    w        = sample_w_posterior(X, Y, N_data, N_vars, XtX, XtY, tau2, lamb2, sigma2_n)
+    sigma2_n = sample_sigma2_n_posterior(X, Y, w, N_data, N_vars, lamb2, tau2)
+    lamb2    = sample_lamb2_posterior(w, N_vars, sigma2_n, lamb2, tau2, nu)
+    tau2     = sample_tau2_posterior(w, N_vars, sigma2_n, lamb2, xi)
+    nu       = sample_nu_posterior(N_vars, lamb2, nu)
+    xi       = sample_xi_posterior(tau2)
+    return w, sigma2_n, lamb2, tau2, nu, xi
+end
+
+function sample_horseshoe_posterior(
+    X,
+    Y,
+    w,
+    sigma2_n,
+    lamb2,
+    tau2,
+    nu,
+    xi,
+    num_iter,
+    show_progress,
+    seed=nothing,
+    # return_error_history=false
+)
     if !isnothing(seed)
         Random.seed!(seed)
     end
 
     N_data, N_vars = size(X)
 
-    w        = zeros(N_vars)
-    sigma2_n = 1.
-    lamb2    = ones(size(X, 2))
-    tau2     = 1.
-    nu       = ones(size(X, 2))
-    xi       = 1.
-
     XtX = X' * X
     XtY = X' * Y
 
     for i in 1:num_iter
-        w        = sample_w_posterior(X, Y, N_data, N_vars, XtY, XtX, tau2, lamb2, sigma2_n)
-        sigma2_n = sample_sigma2_n_posterior(X, Y, w, N_data, N_vars, lamb2, tau2)
-        lamb2    = sample_lamb2_posterior(w, N_vars, sigma2_n, lamb2, tau2, nu)
-        tau2     = sample_tau2_posterior(w, N_vars, sigma2_n, lamb2, xi)
-        nu       = sample_nu_posterior(N_vars, lamb2, nu)
-        xi       = sample_xi_posterior(tau2)
+        w, sigma2_n, lamb2, tau2, nu, xi = sample_params_posterior(X, Y, w, N_data, N_vars, XtX, XtY, sigma2_n, lamb2, tau2, nu, xi)
 
-        if show_progress && i % 100 == 0
+        if show_progress
             error = Y - X * w
             println("Iteration $i: $(mean(error .^ 2))")
         end
