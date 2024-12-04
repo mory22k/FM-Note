@@ -289,7 +289,7 @@ $$
 
 </blockquote>
 
-According this theorem, if both $\bm x^k$ and $\bm u^k$ satisfy this constraint, then
+According this theorem, if both $\bm x^k$ and $\bm u^k$ satisfy this constraint, then the constraints
 
 $$
 \begin{aligned}
@@ -305,7 +305,7 @@ $$
 \end{aligned}
 $$
 
-is all satisfied. This means that the optimal solution to the master problem is the same as the optimal solution to the original problem.
+are all satisfied. This means that the optimal solution to the master problem is the same as the optimal solution to the original problem.
 
 Note that the algorithm above implicitly assumes that the dual of the subproblem always has an optimal solution. For the case where the subproblem is unbounded or infeasible, we need to add some modifications to the algorithm. Refer to [Benders (1962), Konno (1981), Wikipedia, etc.] for more details.
 
