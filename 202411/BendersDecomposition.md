@@ -69,7 +69,7 @@ The first stage problem $\text{(M)}$ is called the **master problem** and the se
 
 **Proposition 1**
 
-The optimal solution to the original problem $\text{(P)}$ is the same as that of the optimal solution to the two-stage optimization problem $\text{(M)}$-$\text{(S)}$.
+The optimal solution to the original problem $\text{(P)}$ is the same as the optimal solution to the two-stage optimization problem $\text{(M)}$-$\text{(S)}$.
 
 </blockquote>
 
@@ -274,9 +274,40 @@ $$
 $$
 
 is called a **Benders cut**.
-If both $\bm x^k$ and $\bm u^k$ satisfy this constraint, then the optimal solution to the master problem satisfies all the constraints in $\text{(M'')}$, and thus we can conclude that the optimal solution to the master problem is the same as the optimal solution to the original problem.
 
-Note that the algorithm above implicitly assumes that the dual problem of the subproblem always has an optimal solution. For the case where the dual problem is unbounded or infeasible, we need to add a feasibility cut to the master problem. Please refer to [Benders (1962), Konno (1981), Wikipedia, etc.] for more details.
+<blockquote>
+
+**Theorem 2 (Weak Duality Theorem)**
+
+If $\bm y$ is a feasible solution to the subproblem, and $\bm u$ is a feasible solution to the dual of the subproblem, then the following inequality holds:
+
+$$
+\begin{aligned}
+\bm c_y^\top \bm y \ge \bm u^\top (\bm b - \bm A_x \bm x).
+\end{aligned}
+$$
+
+</blockquote>
+
+According this theorem, if both $\bm x^k$ and $\bm u^k$ satisfy this constraint, then
+
+$$
+\begin{aligned}
+\phi^k \ge \bm u^\top (\bm b - \bm A_x \bm x^k),
+&& \forall \bm u \in \left\{
+    \bm u 
+    ~\middle|~
+        \begin{aligned}
+            & \bm u^\top \bm A_y \leq \bm c_y^\top, \\
+            & \bm u \in \mathbb{R}_{\ge 0}^p
+        \end{aligned}
+    \right\}
+\end{aligned}
+$$
+
+is all satisfied. This means that the optimal solution to the master problem is the same as the optimal solution to the original problem.
+
+Note that the algorithm above implicitly assumes that the dual of the subproblem always has an optimal solution. For the case where the subproblem is unbounded or infeasible, we need to add some modifications to the algorithm. Refer to [Benders (1962), Konno (1981), Wikipedia, etc.] for more details.
 
 ## References
 
